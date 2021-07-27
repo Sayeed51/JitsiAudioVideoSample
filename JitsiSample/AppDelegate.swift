@@ -29,7 +29,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate , PKPushRegistryDelegate{
     }
     
     func pushKitRegistration() {
-       // let mainQueue = DispatchQueue.main
         let registry: PKPushRegistry = PKPushRegistry(queue: nil)
         registry.delegate = self
         registry.desiredPushTypes = [.voIP]
@@ -121,31 +120,23 @@ extension AppDelegate {
     }
     
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
-        print(payload)
-        let controller = ViewController()
-        controller.isOutgoingCall = false
-        controller.localCallUUID = UUID()
-        JMCallKitProxy.configureProvider(localizedName: controller.jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
-        
-        print(" startIncomingCall function-->Incoming Call UUID: \(controller.localCallUUID!.uuidString)")
-        controller.avatarName = controller.jitsiIncomingParticipantName
-        
-        let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
+       let localUUID = UUID()
+        //let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
         
         JMCallKitProxy.reportNewIncomingCall(
-            UUID: controller.localCallUUID!,
-            handle: controller.jitsiTitle,
-            displayName: controller.jitsiOutgoingParticipantName,
+            UUID: localUUID,
+            handle: Constants.jitsiTitle,
+            displayName: Constants.jitsiOutgoingParticipantName,
             hasVideo: false
-        )  {  [unowned self] (error) in
+        )  {  (error) in
             guard error == nil else {
                 print("Failed, error: \(String(describing: error))")
-                controller.callButtonsStackView.isHidden = false
                 return
             }
             print("Successfully reported")
-            //controller.callButtonsStackView.isHidden = true
-            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+           // UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.incomingCall), object: nil, userInfo: [Constants.callUUID: localUUID])
+            
         }
     }
 }

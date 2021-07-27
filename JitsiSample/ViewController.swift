@@ -14,6 +14,14 @@ import SnapKit
 import PushKit
 import UserNotifications
 
+struct Constants {
+    static let incomingCall = "incomingCall"
+    static  let jitsiTitle = "SSF APP"
+    static let jitsiOutgoingParticipantName = "Imran Sayeed"
+    static let jitsiIncomingParticipantName = "Emroj Hossain"
+    static let callUUID = "callUUID"
+}
+
 class ViewController: UIViewController {
     @IBOutlet weak var reportIncomingCallButton: UIButton!
     @IBOutlet weak var initiateOutgoingCallButton: UIButton!
@@ -32,9 +40,9 @@ class ViewController: UIViewController {
     
     var player: AVAudioPlayer?
     private var initialTime: Date?
-     let jitsiTitle = "SSF APP"
-     let jitsiOutgoingParticipantName = "Imran Sayeed"
-     let jitsiIncomingParticipantName = "Emroj Hossain"
+//     let jitsiTitle = "SSF APP"
+//     let jitsiOutgoingParticipantName = "Imran Sayeed"
+//     let jitsiIncomingParticipantName = "Emroj Hossain"
     private let roomName = "SampleJitsiAppRoom101"
     
     private lazy var callingLabel: UILabel = {
@@ -88,9 +96,34 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         JMCallKitProxy.addListener(self)
+        
 //        let registry = PKPushRegistry(queue: nil)
 //        registry.delegate = self
 //        registry.desiredPushTypes = [PKPushType.voIP]
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveIncomingCall(_:)), name: Notification.Name(rawValue: Constants.incomingCall), object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func didReceiveIncomingCall(_ notification: NSNotification) {
+        guard let uuid = notification.userInfo?[Constants.callUUID] as? UUID else {
+            return
+        }
+        localCallUUID = uuid
+        JMCallKitProxy.configureProvider(localizedName: Constants.jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
+        
+        print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
+        avatarName = Constants.jitsiIncomingParticipantName
+        self.callButtonsStackView.isHidden = true
     }
     
     @IBAction func reportIncomingCallButtonTapped(_ sender: UIButton) {
@@ -202,10 +235,10 @@ extension ViewController {
     private func startIncomingCall() {
         
         localCallUUID = UUID()
-        JMCallKitProxy.configureProvider(localizedName: jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
+        JMCallKitProxy.configureProvider(localizedName: Constants.jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
         
         print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
-        avatarName = jitsiIncomingParticipantName
+        avatarName = Constants.jitsiIncomingParticipantName
         
         let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
         DispatchQueue.main.asyncAfter(
@@ -213,8 +246,8 @@ extension ViewController {
             execute: { [unowned self] in
                 JMCallKitProxy.reportNewIncomingCall(
                     UUID: localCallUUID!,
-                    handle: jitsiTitle,
-                    displayName: jitsiOutgoingParticipantName,
+                    handle: Constants.jitsiTitle,
+                    displayName: Constants.jitsiOutgoingParticipantName,
                     hasVideo: false
                 )  {  [unowned self] (error) in
                     guard error == nil else {
@@ -233,9 +266,9 @@ extension ViewController {
     private func startOutgoingCall() {
         callButtonsStackView.isHidden = true
         localCallUUID = UUID()
-        avatarName = jitsiOutgoingParticipantName
+        avatarName = Constants.jitsiOutgoingParticipantName
         print("reporting outgoing call from button tapped and UUID--> \(localCallUUID?.uuidString)")
-        let handle = CXHandle(type: .generic, value: jitsiIncomingParticipantName)
+        let handle = CXHandle(type: .generic, value: Constants.jitsiIncomingParticipantName)
         // 2
         let startCallAction = CXStartCallAction(call: localCallUUID!, handle: handle)
         // 3
