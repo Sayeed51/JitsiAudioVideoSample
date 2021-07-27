@@ -11,6 +11,7 @@ import AVFoundation
 import CallKit
 import WebRTC
 import SnapKit
+import PushKit
 
 class ViewController: UIViewController {
     @IBOutlet weak var reportIncomingCallButton: UIButton!
@@ -19,19 +20,20 @@ class ViewController: UIViewController {
     fileprivate var pipViewCoordinator: PiPViewCoordinator?
     @IBOutlet weak var callButtonsStackView: UIStackView!
     
-    private var localCallUUID: UUID?
+     var localCallUUID: UUID?
     private var isAudioMuted = false
-    private var avatarName = "something"
+     var avatarName = "something"
     private var isAudioCall = true
     private var numberOfOtherParticipantsInCall = 0
-    private var isOutgoingCall = false
+     var isOutgoingCall = false
     private var timer: Timer?
+    private var isTimeLabelAlreadyAdded = false
     
     var player: AVAudioPlayer?
     private var initialTime: Date?
-    private let jitsiTitle = "SSF APP"
-    private let jitsiOutgoingParticipantName = "Shafin"
-    private let jitsiIncomingParticipantName = "Imran Sayeed"
+     let jitsiTitle = "SSF APP"
+     let jitsiOutgoingParticipantName = "Imran Sayeed"
+     let jitsiIncomingParticipantName = "Emroj Hossain"
     private let roomName = "SampleJitsiAppRoom101"
     
     private lazy var callingLabel: UILabel = {
@@ -63,17 +65,17 @@ class ViewController: UIViewController {
         JMCallKitProxy.removeListener(self)
         JMCallKitProxy.callKitProvider?.invalidate()
     }
-
+    
     func playSound() {
         guard let url = Bundle.main.url(forResource: "ringbackTone", withExtension: "wav") else { return }
-
+        
         do {
             try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .voiceChat)
             try AVAudioSession.sharedInstance().setActive(true)
             /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
             /* iOS 10 and earlier require the following line:
-            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
             guard let player = player else { return }
             player.play()
         } catch let error {
@@ -85,6 +87,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         JMCallKitProxy.addListener(self)
+//        let registry = PKPushRegistry(queue: nil)
+//        registry.delegate = self
+//        registry.desiredPushTypes = [PKPushType.voIP]
     }
     
     @IBAction func reportIncomingCallButtonTapped(_ sender: UIButton) {
@@ -107,7 +112,7 @@ class ViewController: UIViewController {
             .fromBuilder {[unowned self] (builder) in
                 builder.callUUID = callID
                 builder.callHandle = "Dummy SSF App"
-                builder.audioOnly = self.isAudioCall
+                builder.videoMuted = isAudioCall
                 builder.room = self.roomName
                 builder.subject = self.avatarName
                 let userInfo = JitsiMeetUserInfo()
@@ -160,8 +165,11 @@ class ViewController: UIViewController {
     }
     
     func addTimeLabel() {
+        if isTimeLabelAlreadyAdded {
+            return
+        }
         self.jitsiMeetView?.addSubview(self.timeLabel)
-        
+        isTimeLabelAlreadyAdded = true
         self.timeLabel.snp.makeConstraints {  (make) in
             make.topMargin.lessThanOrEqualToSuperview().offset(50)
             make.leading.equalToSuperview()
@@ -179,6 +187,7 @@ class ViewController: UIViewController {
         timer = nil
         initialTime = nil
         timeLabel.text = nil
+        isTimeLabelAlreadyAdded = false
         isAudioMuted = false
         isAudioCall = true
         jitsiMeetView = nil
@@ -195,7 +204,7 @@ extension ViewController {
         JMCallKitProxy.configureProvider(localizedName: jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
         
         print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
-        avatarName = jitsiOutgoingParticipantName
+        avatarName = jitsiIncomingParticipantName
         
         let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
         DispatchQueue.main.asyncAfter(
@@ -223,7 +232,7 @@ extension ViewController {
     private func startOutgoingCall() {
         callButtonsStackView.isHidden = true
         localCallUUID = UUID()
-        avatarName = jitsiIncomingParticipantName
+        avatarName = jitsiOutgoingParticipantName
         print("reporting outgoing call from button tapped and UUID--> \(localCallUUID?.uuidString)")
         let handle = CXHandle(type: .generic, value: jitsiIncomingParticipantName)
         // 2
@@ -262,15 +271,15 @@ extension ViewController: JitsiMeetViewDelegate {
     }
     
     func participantJoined(_ data: [AnyHashable : Any]!) {
-        self.numberOfOtherParticipantsInCall += 1
         guard let isLocalUser = data["isLocal"] as? Bool else {
             self.hideCallingLabelStopRiningSound()
+            addTimeLabel()
             self.timeLabel.isHidden = false
             startTimer()
             
             return
         }
-
+        self.numberOfOtherParticipantsInCall += 1
         if !isLocalUser {
             self.hideCallingLabelStopRiningSound()
         }
@@ -382,9 +391,9 @@ extension ViewController: RTCAudioSessionDelegate {
         do {
             try session.setCategory(AVAudioSession.Category.playAndRecord.rawValue, with: .allowBluetooth)
             try session.setMode(AVAudioSession.Mode.default.rawValue)
-//            try session.setPreferredSampleRate(44100.0)
-//            try session.setPreferredIOBufferDuration(0.005)
-           // try session.overrideOutputAudioPort(.none)
+            //            try session.setPreferredSampleRate(44100.0)
+            //            try session.setPreferredIOBufferDuration(0.005)
+            // try session.overrideOutputAudioPort(.none)
         } catch let error {
             debugPrint("audioSessionDidChangeRoute error-> \(error)")
         }
@@ -404,11 +413,11 @@ extension ViewController {
         var times: [String] = []
         if hours > 0 {
             let hoursStr = hours > 9 ? "\(hours)" : ("0"+"\(hours)")
-          times.append(hoursStr)
+            times.append(hoursStr)
         }
         if minutes > 0 {
             let minutesStr = minutes > 9 ? "\(minutes)" : ("0"+"\(minutes)")
-          times.append(minutesStr)
+            times.append(minutesStr)
         } else {
             times.append("00")
         }
@@ -416,5 +425,41 @@ extension ViewController {
         times.append(secondsStr)
         
         timeLabel.text = times.joined(separator: ":")
-      }
+    }
 }
+//
+//
+//extension ViewController: PKPushRegistryDelegate {
+//
+//    func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
+//        print(pushCredentials.token.map { String(format: "%02.2hhx", $0) }.joined())
+//    }
+//
+//    func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+//        print(payload)
+//        isOutgoingCall = false
+//        localCallUUID = UUID()
+//        JMCallKitProxy.configureProvider(localizedName: jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
+//
+//        print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
+//        avatarName = jitsiIncomingParticipantName
+//
+//        let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
+//
+//        JMCallKitProxy.reportNewIncomingCall(
+//            UUID: localCallUUID!,
+//            handle: jitsiTitle,
+//            displayName: jitsiOutgoingParticipantName,
+//            hasVideo: false
+//        )  {  [unowned self] (error) in
+//            guard error == nil else {
+//                print("Failed, error: \(String(describing: error))")
+//                self.callButtonsStackView.isHidden = false
+//                return
+//            }
+//            print("Successfully reported")
+//            self.callButtonsStackView.isHidden = true
+//            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+//        }
+//    }
+//}

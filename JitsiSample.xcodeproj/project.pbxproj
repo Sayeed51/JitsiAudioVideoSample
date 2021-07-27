@@ -13,6 +13,7 @@
 		37D88712253E9F6A00860ECA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37D88710253E9F6A00860ECA /* Main.storyboard */; };
 		37D88714253E9F6F00860ECA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37D88713253E9F6F00860ECA /* Assets.xcassets */; };
 		37D88717253E9F6F00860ECA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37D88715253E9F6F00860ECA /* LaunchScreen.storyboard */; };
+		715EF8A426B016E800507FC5 /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 715EF8A326B016E800507FC5 /* CallKit.framework */; };
 		719646FF269C5C48001481BC /* ringbackTone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 719646FE269C5C48001481BC /* ringbackTone.wav */; };
 		E9166FDE3987F1EF9D3FF79F /* Pods_JitsiSample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6811D40DF72F43B12484011E /* Pods_JitsiSample.framework */; };
 /* End PBXBuildFile section */
@@ -27,6 +28,8 @@
 		37D88716253E9F6F00860ECA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		37D88718253E9F6F00860ECA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6811D40DF72F43B12484011E /* Pods_JitsiSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_JitsiSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		715EF8A326B016E800507FC5 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
+		715EF8A526B0179E00507FC5 /* JitsiSample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JitsiSample.entitlements; sourceTree = "<group>"; };
 		719646FE269C5C48001481BC /* ringbackTone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ringbackTone.wav; sourceTree = "<group>"; };
 		B6FBDB388C1C7C74810CF5BA /* Pods-JitsiSample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JitsiSample.debug.xcconfig"; path = "Target Support Files/Pods-JitsiSample/Pods-JitsiSample.debug.xcconfig"; sourceTree = "<group>"; };
 		BE024CE12FC1D1DBF3B8D74F /* Pods-JitsiSample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JitsiSample.release.xcconfig"; path = "Target Support Files/Pods-JitsiSample/Pods-JitsiSample.release.xcconfig"; sourceTree = "<group>"; };
@@ -37,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				715EF8A426B016E800507FC5 /* CallKit.framework in Frameworks */,
 				E9166FDE3987F1EF9D3FF79F /* Pods_JitsiSample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -65,6 +69,7 @@
 		37D88709253E9F6A00860ECA /* JitsiSample */ = {
 			isa = PBXGroup;
 			children = (
+				715EF8A526B0179E00507FC5 /* JitsiSample.entitlements */,
 				719646FE269C5C48001481BC /* ringbackTone.wav */,
 				37D8870A253E9F6A00860ECA /* AppDelegate.swift */,
 				37D8870C253E9F6A00860ECA /* SceneDelegate.swift */,
@@ -89,6 +94,7 @@
 		5B2064225056296E005AE434 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				715EF8A326B016E800507FC5 /* CallKit.framework */,
 				6811D40DF72F43B12484011E /* Pods_JitsiSample.framework */,
 			);
 			name = Frameworks;
@@ -359,6 +365,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = JitsiSample/JitsiSample.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7449R7248Z;
 				ENABLE_BITCODE = NO;
@@ -368,8 +376,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.phaninderkumar.JitsiSample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dsi.JitsiSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -381,6 +390,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = JitsiSample/JitsiSample.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 7449R7248Z;
 				ENABLE_BITCODE = NO;
@@ -390,8 +401,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.phaninderkumar.JitsiSample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dsi.JitsiSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
