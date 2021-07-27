@@ -1,0 +1,20 @@
+PODS:
+  - JitsiMeetSDK (3.6.0)
+  - SnapKit (5.0.1)
+
+DEPENDENCIES:
+  - JitsiMeetSDK
+  - SnapKit (~> 5.0.1)
+
+SPEC REPOS:
+  trunk:
+    - JitsiMeetSDK
+    - SnapKit
+
+SPEC CHECKSUMS:
+  JitsiMeetSDK: 476329f72a866f714d2802bafe1729de6d644ccf
+  SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
+
+PODFILE CHECKSUM: 5dbbefbe4e7844bac6b28849954ae3fdd2b5230f
+
+COCOAPODS: 1.10.1
