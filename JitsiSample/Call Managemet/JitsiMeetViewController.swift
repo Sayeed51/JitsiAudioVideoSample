@@ -1,51 +1,30 @@
 //
-//  ViewController.swift
+//  JitsiMeetViewController.swift
 //  JitsiSample
 //
-//  Created by Phaninder Kumar on 20/10/20.
+//  Created by Imran Sayeed on 29/7/21.
 //
 
 import UIKit
-import JitsiMeetSDK
 import AVFoundation
+import JitsiMeetSDK
 import CallKit
-import WebRTC
-import SnapKit
-import PushKit
-import UserNotifications
 
-struct Constants {
-    static let incomingCall = "incomingCall"
-    static  let jitsiTitle = "SSF APP"
-    static let jitsiOutgoingParticipantName = "Imran Sayeed"
-    static let jitsiIncomingParticipantName = "Emroj Hossain"
-    static let callUUID = "callUUID"
-    static let callMuted = "callMuted"
-    static let callMutedKey = "callMutedKey"
-}
-
-class ViewController: UIViewController {
-    @IBOutlet weak var reportIncomingCallButton: UIButton!
-    @IBOutlet weak var initiateOutgoingCallButton: UIButton!
-    fileprivate var jitsiMeetView: JitsiMeetView?
-    fileprivate var pipViewCoordinator: PiPViewCoordinator?
-    @IBOutlet weak var callButtonsStackView: UIStackView!
-    
-    var localCallUUID: UUID?
-    private var isAudioMuted = false
-    var avatarName = "something"
-    private var isAudioCall = true
+class JitsiMeetViewController: UIViewController {
+    private let roomName = "SampleJitsiAppRoom101"
+    private var jitsiMeetView: JitsiMeetView?
+    private var pipViewCoordinator: PiPViewCoordinator?
     private var numberOfOtherParticipantsInCall = 0
-    var isOutgoingCall = false
+    var avatarName = "SSF"
     private var timer: Timer?
     private var isTimeLabelAlreadyAdded = false
     
     var player: AVAudioPlayer?
     private var initialTime: Date?
-    private let roomName = "SampleJitsiAppRoom101"
-    var callManager: CallManager?
+     var callManager: CallManager?
     var call: Call?
-    
+    var callUUID: UUID?
+ 
     private lazy var callingLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -72,84 +51,36 @@ class ViewController: UIViewController {
     
     deinit {
         cleanUp()
-        //JMCallKitProxy.removeListener(self)
-        JMCallKitProxy.callKitProvider?.invalidate()
-    }
-    
-    func playSound() {
-        guard let url = Bundle.main.url(forResource: "ringbackTone", withExtension: "wav") else { return }
-        
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .voiceChat)
-            try AVAudioSession.sharedInstance().setActive(true)
-            /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
-            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
-            /* iOS 10 and earlier require the following line:
-             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
-            guard let player = player else { return }
-            player.play()
-        } catch let error {
-            debugPrint(error.localizedDescription)
-        }
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        joinMeet()
+        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveAudioMutedOption(_:)), name: Notification.Name(rawValue: Constants.callMutedKey), object: nil)
     }
     
-    func addListenerAndNotificationObserver() {
-        //JMCallKitProxy.addListener(self)
-        //        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveIncomingCall(_:)), name: Notification.Name(rawValue: Constants.incomingCall), object: nil)
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        
-        //NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc private func didReceiveIncomingCall(_ notification: NSNotification) {
-        guard let uuid = notification.userInfo?[Constants.callUUID] as? UUID else {
+    @objc private func didReceiveAudioMutedOption(_ notification: NSNotification) {
+        guard let muted = notification.userInfo?[Constants.callMuted] as? Bool else {
             return
         }
-        localCallUUID = uuid
-        JMCallKitProxy.configureProvider(localizedName: Constants.jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
-        
-        print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
-        avatarName = Constants.jitsiIncomingParticipantName
-        self.callButtonsStackView.isHidden = true
+        jitsiMeetView?.setAudioMuted(muted)
     }
     
-    @IBAction func reportIncomingCallButtonTapped(_ sender: UIButton) {
-        isOutgoingCall = false
-        startIncomingCall()
-    }
-    
-    @IBAction func initiateOutgoingCallButtonTapped(_ sender: UIButton) {
-        isOutgoingCall = true
-        startOutgoingCall()
-    }
-    
-    func joinMeet() {
-        cleanUp()
-        guard let call = call else { return  }
-        callButtonsStackView.isHidden = true
-        isAudioCall = call.isAudioCall
-        isOutgoingCall = call.outgoing
-        avatarName = isOutgoingCall ? Constants.jitsiOutgoingParticipantName: Constants.jitsiIncomingParticipantName
+    private func joinMeet() {
+      
+        guard let call = call else {
+            return
+        }
         let jitsiMeetView = JitsiMeetView()
         jitsiMeetView.delegate = self
         self.jitsiMeetView = jitsiMeetView
-        
+        view.backgroundColor = .red
         let options = JitsiMeetConferenceOptions
             .fromBuilder {[unowned self] (builder) in
                 builder.callUUID = call.uuid
                 builder.callHandle = "Dummy SSF App"
-                builder.videoMuted = isAudioCall
+                builder.videoMuted = call.isAudioCall
                 builder.room = self.roomName
                 builder.subject = self.avatarName
                 let userInfo = JitsiMeetUserInfo()
@@ -167,18 +98,18 @@ class ViewController: UIViewController {
     
     private func endCallManually(withEndCallReason reason: CXCallEndedReason = .remoteEnded) {
         self.hideCallingLabelStopRiningSound()
-        //JMCallKitProxy.reportCall(with: localCallUUID ?? UUID(), endedAt: nil, reason: reason)
-        guard let call = call else { return  }
-        callManager?.end(call: call)
         jitsiMeetView?.hangUp()
+        guard let call = call, let getCall = callManager?.callWithUUID(uuid: call.uuid)  else {
+            return
+        }
+        callManager?.end(call: getCall)
         
-        self.callButtonsStackView.isHidden = false
-        localCallUUID = nil
+       
         cleanUp()
     }
     
     private func hideCallingLabelStopRiningSound() {
-        if !isOutgoingCall {
+        if let _ = call?.outgoing {
             return
         }
         self.callingLabel.isHidden = true
@@ -201,6 +132,23 @@ class ViewController: UIViewController {
             make.height.equalTo(50)
         }
         playSound()
+    }
+    
+    func playSound() {
+        guard let url = Bundle.main.url(forResource: "ringbackTone", withExtension: "wav") else { return }
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .voiceChat)
+            try AVAudioSession.sharedInstance().setActive(true)
+            /* The following line is required for the player to work on iOS 11. Change the file type accordingly*/
+            player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileType.mp3.rawValue)
+            /* iOS 10 and earlier require the following line:
+             player = try AVAudioPlayer(contentsOf: url, fileTypeHint: AVFileTypeMPEGLayer3) */
+            guard let player = player else { return }
+            player.play()
+        } catch let error {
+            debugPrint(error.localizedDescription)
+        }
     }
     
     func addTimeLabel() {
@@ -227,46 +175,23 @@ class ViewController: UIViewController {
         initialTime = nil
         timeLabel.text = nil
         isTimeLabelAlreadyAdded = false
-        isAudioMuted = false
-        isAudioCall = true
         jitsiMeetView = nil
         pipViewCoordinator = nil
     }
-}
-
-// MARK:- Incoming/outgoing call implementation methods
-
-extension ViewController {
-    private func startIncomingCall() {
-        
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return  }
-        let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
-        let localUUID = UUID()
-        appDelegate.providerDelegate.reportIncomingCall(uuid: localUUID, handle: Constants.jitsiTitle, displayName: Constants.jitsiOutgoingParticipantName, completion: { error in
-            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
-        })
-    }
     
-    private func startOutgoingCall() {
-        
-        print("reporting outgoing call from button tapped and UUID--> \(localCallUUID?.uuidString)")
-        guard let appdelegate = UIApplication.shared.delegate as? AppDelegate else { return  }
-        appdelegate.callManager.startCall(handle: Constants.jitsiIncomingParticipantName, videoEnabled: isAudioCall)
-    }
 }
 
-
-extension ViewController: JitsiMeetViewDelegate {
+extension JitsiMeetViewController: JitsiMeetViewDelegate {
     func conferenceTerminated(_ data: [AnyHashable : Any]!) {
-        DispatchQueue.main.async {
-            self.pipViewCoordinator?.hide() { _ in
-                self.endCallManually()
-            }
+        DispatchQueue.main.async {[weak self] in
+            self?.endCallManually()
         }
     }
     
     func conferenceJoined(_ data: [AnyHashable : Any]!) {
-        if isOutgoingCall {
+//        let isAvailable = JMCallKitProxy.hasActiveCallForUUID(localCallUUID!.uuidString)
+//        print("IsCall Available: \(isAvailable)")
+        if let isOutgoing = call?.outgoing, isOutgoing  {
             self.addCallingLabel()
         }
         addTimeLabel()
@@ -282,7 +207,7 @@ extension ViewController: JitsiMeetViewDelegate {
             return
         }
         self.numberOfOtherParticipantsInCall += 1
-        if !isLocalUser {
+        if let isOutgoing = call?.outgoing, !isOutgoing {
             self.hideCallingLabelStopRiningSound()
         }
     }
@@ -291,7 +216,7 @@ extension ViewController: JitsiMeetViewDelegate {
         self.numberOfOtherParticipantsInCall -= 1
         
         if numberOfOtherParticipantsInCall == 0 {
-            self.jitsiMeetView?.hangUp()
+           endCallManually()
         }
     }
     
@@ -302,7 +227,7 @@ extension ViewController: JitsiMeetViewDelegate {
     }
 }
 
-extension ViewController {
+extension JitsiMeetViewController {
     @objc private func updateTime() {
         initialTime = initialTime ?? Date()
         let time = Date().timeIntervalSince(initialTime!)

@@ -14,10 +14,13 @@ import UserNotifications
 class AppDelegate: UIResponder, UIApplicationDelegate , PKPushRegistryDelegate{
     
     var window : UIWindow?
-    
-    
+    var isAppOpendedForPuskitNotification = false
+    let callManager = CallManager()
+    var providerDelegate: ProviderDelegate!
+    var callUUID: UUID?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        providerDelegate = ProviderDelegate(callManager: callManager)
         JMCallKitProxy.configureProvider(localizedName: "SSF App Sample",
                                          ringtoneSound: nil,
                                          iconTemplateImageData: nil)
@@ -28,8 +31,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate , PKPushRegistryDelegate{
         return true
     }
     
+   
+    
     func pushKitRegistration() {
-        let registry: PKPushRegistry = PKPushRegistry(queue: nil)
+        let mainQueue = DispatchQueue.main
+        let registry: PKPushRegistry = PKPushRegistry(queue: mainQueue)
         registry.delegate = self
         registry.desiredPushTypes = [.voIP]
     }
@@ -47,6 +53,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate , PKPushRegistryDelegate{
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+    }
+    
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        if isAppOpendedForPuskitNotification {
+            print("app opend for pushkit notification data")
+            isAppOpendedForPuskitNotification = false
+        }
     }
     
     // Push notification setting
@@ -120,24 +133,48 @@ extension AppDelegate {
     }
     
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+        let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
        let localUUID = UUID()
-        //let backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
-        
-        JMCallKitProxy.reportNewIncomingCall(
-            UUID: localUUID,
-            handle: Constants.jitsiTitle,
-            displayName: Constants.jitsiOutgoingParticipantName,
-            hasVideo: false
-        )  {  (error) in
-            guard error == nil else {
-                print("Failed, error: \(String(describing: error))")
-                return
-            }
-            print("Successfully reported")
-           // UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.incomingCall), object: nil, userInfo: [Constants.callUUID: localUUID])
-            
+        providerDelegate.reportIncomingCall(uuid: localUUID, handle: Constants.jitsiTitle, displayName: Constants.jitsiOutgoingParticipantName, completion: { error in
+            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+        })
+//        isAppOpendedForPuskitNotification = true
+//        callUUID = localUUID
+//        JMCallKitProxy.reportNewIncomingCall(
+//            UUID: localUUID,
+//            handle: Constants.jitsiTitle,
+//            displayName: Constants.jitsiOutgoingParticipantName,
+//            hasVideo: false
+//        )  {  (error) in
+//            guard error == nil else {
+//                print("Failed, error: \(String(describing: error))")
+//                return
+//            }
+//            print("Successfully reported")
+//            NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.incomingCall), object: nil, userInfo: [Constants.callUUID: localUUID])
+//            //let _ = ProviderDelegate(callID: localUUID)
+//            if let topViewController = UIApplication.topViewController() as? ViewController {
+//                topViewController.addListenerAndNotificationObserver()
+//            }
+//            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+//        }
+    }
+    
+    func topViewControllerWithRootViewController(rootViewController: UIViewController!) -> UIViewController! {
+
+        if rootViewController is UITabBarController {
+            let tabbarController =  rootViewController as! UITabBarController
+            return self.topViewControllerWithRootViewController(rootViewController: tabbarController.selectedViewController)
+        } else if rootViewController is UINavigationController {
+            let navigationController = rootViewController as! UINavigationController
+            return self.topViewControllerWithRootViewController(rootViewController: navigationController.visibleViewController)
+        } else if ((rootViewController.presentedViewController) != nil){
+            let controller = rootViewController.presentedViewController
+            return self.topViewControllerWithRootViewController(rootViewController: controller)
+        } else {
+            return rootViewController
         }
+
     }
 }
 
@@ -157,5 +194,22 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
         let userInfo = notification.request.content.userInfo
         print("willPresent ======", userInfo)
         completionHandler([.alert, .sound, .badge])
+    }
+}
+
+extension UIApplication {
+    class func topViewController(controller: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
+        if let navigationController = controller as? UINavigationController {
+            return topViewController(controller: navigationController.visibleViewController)
+        }
+        if let tabController = controller as? UITabBarController {
+            if let selected = tabController.selectedViewController {
+                return topViewController(controller: selected)
+            }
+        }
+        if let presented = controller?.presentedViewController {
+            return topViewController(controller: presented)
+        }
+        return controller
     }
 }
