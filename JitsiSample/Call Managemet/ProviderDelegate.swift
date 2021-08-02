@@ -38,47 +38,40 @@ class ProviderDelegate: NSObject {
             hasVideo: false
         ) { error in
             if error == nil {
-                // 3.
                 let call = Call(uuid: uuid, handle: handle, isAudioCall: !hasVideo)
                 self.callManager.add(call: call)
             }
-            
-            // 4.
             completion?(error)
-            
         }
     }
     
     private func showJitsiView() {
-        if let topViewController = UIApplication.topViewController() as? ViewController {
-            topViewController.callManager = callManager
-            topViewController.call = callManager.callWithUUID(uuid: callManager.calls.first?.uuid ?? UUID())
-                        topViewController.joinMeet()
-                    }
-//        if var topController = UIApplication.shared.keyWindow?.rootViewController {
-//            while let presentedViewController = topController.presentedViewController {
-//                topController = presentedViewController
-//            }
-//          if !isViewPresenting {
-//            jitsiView(for: topController)
-//            isViewPresenting = true
-//          }
-//        }
-    }
-    
-    fileprivate func jitsiView(for view: UIViewController = UIViewController()){
-      let jitsi = JitsiMeetViewController()
-        jitsi.callManager = callManager
-        jitsi.call = callManager.callWithUUID(uuid: callManager.calls.first?.uuid ?? UUID())
-      view.present(jitsi, animated: true, completion: nil)
-    }
-    
-    private func dismissView() {
         if var topController = UIApplication.shared.keyWindow?.rootViewController {
             while let presentedViewController = topController.presentedViewController {
                 topController = presentedViewController
             }
-          topController.dismiss(animated: true, completion: nil)
+            if !isViewPresenting {
+                jitsiView(for: topController)
+                isViewPresenting = true
+            }
+        }
+    }
+    
+    fileprivate func jitsiView(for view: UIViewController = UIViewController()){
+        let jitsi = JitsiMeetViewController()
+        jitsi.callManager = callManager
+        jitsi.call = callManager.callWithUUID(uuid: callManager.calls.first?.uuid ?? UUID())
+        jitsi.modalPresentationStyle = .fullScreen
+        view.present(jitsi, animated: true, completion: nil)
+    }
+    
+    private func dismissView() {
+        isViewPresenting = false
+        if var topController = UIApplication.shared.keyWindow?.rootViewController {
+            while let presentedViewController = topController.presentedViewController {
+                topController = presentedViewController
+            }
+            topController.dismiss(animated: true, completion: nil)
         }
     }
 }
@@ -109,8 +102,8 @@ extension ProviderDelegate: JMCallKitListener {
         isViewPresenting = false
         dismissView()
         guard let call = callManager.callWithUUID(uuid: UUID) else {
-          
-          return
+            
+            return
         }
         call.end()
         callManager.end(call: call)

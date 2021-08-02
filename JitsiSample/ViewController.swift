@@ -8,21 +8,8 @@
 import UIKit
 import JitsiMeetSDK
 import AVFoundation
-import CallKit
-import WebRTC
 import SnapKit
-import PushKit
 import UserNotifications
-
-struct Constants {
-    static let incomingCall = "incomingCall"
-    static  let jitsiTitle = "SSF APP"
-    static let jitsiOutgoingParticipantName = "Imran Sayeed"
-    static let jitsiIncomingParticipantName = "Emroj Hossain"
-    static let callUUID = "callUUID"
-    static let callMuted = "callMuted"
-    static let callMutedKey = "callMutedKey"
-}
 
 class ViewController: UIViewController {
     @IBOutlet weak var reportIncomingCallButton: UIButton!
@@ -31,12 +18,11 @@ class ViewController: UIViewController {
     fileprivate var pipViewCoordinator: PiPViewCoordinator?
     @IBOutlet weak var callButtonsStackView: UIStackView!
     
-    var localCallUUID: UUID?
     private var isAudioMuted = false
-    var avatarName = "something"
+    private var avatarName = "something"
     private var isAudioCall = true
     private var numberOfOtherParticipantsInCall = 0
-    var isOutgoingCall = false
+    private var isOutgoingCall = false
     private var timer: Timer?
     private var isTimeLabelAlreadyAdded = false
     
@@ -98,32 +84,6 @@ class ViewController: UIViewController {
         
     }
     
-    func addListenerAndNotificationObserver() {
-        //JMCallKitProxy.addListener(self)
-        //        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveIncomingCall(_:)), name: Notification.Name(rawValue: Constants.incomingCall), object: nil)
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        
-        //NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc private func didReceiveIncomingCall(_ notification: NSNotification) {
-        guard let uuid = notification.userInfo?[Constants.callUUID] as? UUID else {
-            return
-        }
-        localCallUUID = uuid
-        JMCallKitProxy.configureProvider(localizedName: Constants.jitsiTitle, ringtoneSound: nil, iconTemplateImageData: nil)
-        
-        print(" startIncomingCall function-->Incoming Call UUID: \(localCallUUID!.uuidString)")
-        avatarName = Constants.jitsiIncomingParticipantName
-        self.callButtonsStackView.isHidden = true
-    }
-    
     @IBAction func reportIncomingCallButtonTapped(_ sender: UIButton) {
         isOutgoingCall = false
         startIncomingCall()
@@ -165,7 +125,7 @@ class ViewController: UIViewController {
         pipViewCoordinator?.show()
     }
     
-    private func endCallManually(withEndCallReason reason: CXCallEndedReason = .remoteEnded) {
+    private func endCallManually() {
         self.hideCallingLabelStopRiningSound()
         //JMCallKitProxy.reportCall(with: localCallUUID ?? UUID(), endedAt: nil, reason: reason)
         guard let call = call else { return  }
@@ -173,7 +133,6 @@ class ViewController: UIViewController {
         jitsiMeetView?.hangUp()
         
         self.callButtonsStackView.isHidden = false
-        localCallUUID = nil
         cleanUp()
     }
     
@@ -248,8 +207,6 @@ extension ViewController {
     }
     
     private func startOutgoingCall() {
-        
-        print("reporting outgoing call from button tapped and UUID--> \(localCallUUID?.uuidString)")
         guard let appdelegate = UIApplication.shared.delegate as? AppDelegate else { return  }
         appdelegate.callManager.startCall(handle: Constants.jitsiIncomingParticipantName, videoEnabled: isAudioCall)
     }
