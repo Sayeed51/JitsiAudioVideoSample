@@ -15,16 +15,15 @@ class JitsiMeetViewController: UIViewController {
     private var jitsiMeetView: JitsiMeetView?
     private var pipViewCoordinator: PiPViewCoordinator?
     private var numberOfOtherParticipantsInCall = 0
-    var avatarName = "SSF"
     private var timer: Timer?
     private var isTimeLabelAlreadyAdded = false
     
     var player: AVAudioPlayer?
     private var initialTime: Date?
-     var callManager: CallManager?
+    var callManager: CallManager?
     var call: Call?
     var callUUID: UUID?
- 
+    
     private lazy var callingLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -51,13 +50,11 @@ class JitsiMeetViewController: UIViewController {
     
     deinit {
         cleanUp()
-        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         joinMeet()
-        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveAudioMutedOption(_:)), name: Notification.Name(rawValue: Constants.callMutedKey), object: nil)
     }
     
     @objc private func didReceiveAudioMutedOption(_ notification: NSNotification) {
@@ -68,7 +65,6 @@ class JitsiMeetViewController: UIViewController {
     }
     
     private func joinMeet() {
-      
         guard let call = call else {
             return
         }
@@ -76,15 +72,22 @@ class JitsiMeetViewController: UIViewController {
         jitsiMeetView.delegate = self
         self.jitsiMeetView = jitsiMeetView
         view.backgroundColor = .red
+        
+        // display and subject is different because of callkit will show subject after receiving any call and display name will show avatar like this Imran -> I
+        let displayName = call.outgoing ? Constants.jitsiOutgoingParticipantName : Constants.jitsiIncomingParticipantName
+        
+        let subject = call.outgoing ? Constants.jitsiIncomingParticipantName : Constants.jitsiOutgoingParticipantName
+        
+        
         let options = JitsiMeetConferenceOptions
             .fromBuilder {[unowned self] (builder) in
                 builder.callUUID = call.uuid
                 builder.callHandle = "Dummy SSF App"
                 builder.videoMuted = call.isAudioCall
                 builder.room = self.roomName
-                builder.subject = self.avatarName
+                builder.subject = subject
                 let userInfo = JitsiMeetUserInfo()
-                userInfo.displayName = self.avatarName
+                userInfo.displayName = displayName
                 builder.userInfo = userInfo
             }
         
@@ -103,15 +106,10 @@ class JitsiMeetViewController: UIViewController {
             return
         }
         callManager?.end(call: getCall)
-        
-       
         cleanUp()
     }
     
     private func hideCallingLabelStopRiningSound() {
-        if let _ = call?.outgoing {
-            return
-        }
         self.callingLabel.isHidden = true
         
         player?.stop()
@@ -189,8 +187,6 @@ extension JitsiMeetViewController: JitsiMeetViewDelegate {
     }
     
     func conferenceJoined(_ data: [AnyHashable : Any]!) {
-//        let isAvailable = JMCallKitProxy.hasActiveCallForUUID(localCallUUID!.uuidString)
-//        print("IsCall Available: \(isAvailable)")
         if let isOutgoing = call?.outgoing, isOutgoing  {
             self.addCallingLabel()
         }
@@ -216,7 +212,7 @@ extension JitsiMeetViewController: JitsiMeetViewDelegate {
         self.numberOfOtherParticipantsInCall -= 1
         
         if numberOfOtherParticipantsInCall == 0 {
-           endCallManually()
+            endCallManually()
         }
     }
     

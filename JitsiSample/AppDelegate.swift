@@ -138,26 +138,6 @@ extension AppDelegate {
         providerDelegate.reportIncomingCall(uuid: localUUID, handle: Constants.jitsiTitle, displayName: Constants.jitsiOutgoingParticipantName, completion: { error in
             UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
         })
-//        isAppOpendedForPuskitNotification = true
-//        callUUID = localUUID
-//        JMCallKitProxy.reportNewIncomingCall(
-//            UUID: localUUID,
-//            handle: Constants.jitsiTitle,
-//            displayName: Constants.jitsiOutgoingParticipantName,
-//            hasVideo: false
-//        )  {  (error) in
-//            guard error == nil else {
-//                print("Failed, error: \(String(describing: error))")
-//                return
-//            }
-//            print("Successfully reported")
-//            NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.incomingCall), object: nil, userInfo: [Constants.callUUID: localUUID])
-//            //let _ = ProviderDelegate(callID: localUUID)
-//            if let topViewController = UIApplication.topViewController() as? ViewController {
-//                topViewController.addListenerAndNotificationObserver()
-//            }
-//            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
-//        }
     }
     
     func topViewControllerWithRootViewController(rootViewController: UIViewController!) -> UIViewController! {
