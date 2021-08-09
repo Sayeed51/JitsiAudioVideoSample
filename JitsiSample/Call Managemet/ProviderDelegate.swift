@@ -16,7 +16,7 @@ class ProviderDelegate: NSObject {
     private let callManager: CallManager
     private let roomName = "SampleJitsiAppRoom101"
     private var isViewPresenting = false
-    
+    let customView = CustomView()
     init(callManager: CallManager) {
         self.callManager = callManager
         super.init()
@@ -46,15 +46,22 @@ class ProviderDelegate: NSObject {
     }
     
     private func showJitsiView() {
-        if var topController = UIApplication.shared.keyWindow?.rootViewController {
-            while let presentedViewController = topController.presentedViewController {
-                topController = presentedViewController
-            }
-            if !isViewPresenting {
-                jitsiView(for: topController)
-                isViewPresenting = true
-            }
+        if let viewController = UIApplication.topViewController() as? ViewController {
+            customView.callManager = callManager
+            customView.call = callManager.callWithUUID(uuid: callManager.calls.first?.uuid ?? UUID())
+            viewController.view.addSubview(customView)
+            customView.frame = viewController.view.bounds
+            customView.joinMeet()
         }
+//        if var topController = UIApplication.shared.keyWindow?.rootViewController {
+//            while let presentedViewController = topController.presentedViewController {
+//                topController = presentedViewController
+//            }
+//            if !isViewPresenting {
+//                jitsiView(for: topController)
+//                isViewPresenting = true
+//            }
+//        }
     }
     
     fileprivate func jitsiView(for view: UIViewController = UIViewController()){
@@ -84,7 +91,7 @@ extension ProviderDelegate: JMCallKitListener {
         }
         
         callManager.removeAllCalls()
-        dismissView()
+        customView.removeFromSuperview()
     }
     
     func performAnswerCall(UUID: UUID) {

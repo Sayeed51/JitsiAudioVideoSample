@@ -1,30 +1,25 @@
 //
-//  JitsiMeetViewController.swift
+//  CustomJitsiView.swift
 //  JitsiSample
 //
-//  Created by Imran Sayeed on 29/7/21.
+//  Created by Imran Sayeed on 5/8/21.
 //
 
 import UIKit
-import AVFoundation
 import JitsiMeetSDK
+import AVFoundation
 import CallKit
-import AVKit
 
-class JitsiMeetViewController: UIViewController {
-    private let roomName = "SampleJitsiAppRoom101"
+class CustomView: UIView {
     private var jitsiMeetView: JitsiMeetView?
-    private var pipViewCoordinator: PiPViewCoordinator?
+    var callManager: CallManager?
+    var call: Call?
+    var player: AVAudioPlayer?
+    private var initialTime: Date?
+    private let roomName = "SampleJitsiAppRoom101"
     private var numberOfOtherParticipantsInCall = 0
     private var timer: Timer?
     private var isTimeLabelAlreadyAdded = false
-    
-    var player: AVAudioPlayer?
-    private var initialTime: Date?
-    var callManager: CallManager?
-    var call: Call?
-    var callUUID: UUID?
-    
     private lazy var callingLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -49,30 +44,26 @@ class JitsiMeetViewController: UIViewController {
         return label
     }()
     
-    deinit {
-        cleanUp()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        joinMeet()
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-    @objc private func didReceiveAudioMutedOption(_ notification: NSNotification) {
-        guard let muted = notification.userInfo?[Constants.callMuted] as? Bool else {
-            return
-        }
-        jitsiMeetView?.setAudioMuted(muted)
-    }
+    private var pipViewCoordinator: PiPViewCoordinator?
     
-    private func joinMeet() {
-        guard let call = call else {
-            return
-        }
+    func joinMeet() {
+        
         let jitsiMeetView = JitsiMeetView()
         jitsiMeetView.delegate = self
         self.jitsiMeetView = jitsiMeetView
-        view.backgroundColor = .red
+        guard let call = call else {
+            return
+        }
         
         // display and subject is different because of callkit will show subject after receiving any call and display name will show avatar like this Imran -> I
         let displayName = call.outgoing ? Constants.jitsiOutgoingParticipantName : Constants.jitsiIncomingParticipantName
@@ -95,7 +86,7 @@ class JitsiMeetViewController: UIViewController {
         jitsiMeetView.join(options)
         
         pipViewCoordinator = PiPViewCoordinator(withView: jitsiMeetView)
-        pipViewCoordinator?.configureAsStickyView(withParentView: view)
+        pipViewCoordinator?.configureAsStickyView(withParentView: self)
         pipViewCoordinator?.initialPositionInSuperview = .lowerRightCorner
         jitsiMeetView.alpha = 1
         pipViewCoordinator?.show()
@@ -104,11 +95,12 @@ class JitsiMeetViewController: UIViewController {
     private func endCallManually(withEndCallReason reason: CXCallEndedReason = .remoteEnded) {
         self.hideCallingLabelStopRiningSound()
         jitsiMeetView?.hangUp()
+        cleanUp()
         guard let call = call, let getCall = callManager?.callWithUUID(uuid: call.uuid)  else {
             return
         }
         callManager?.end(call: getCall)
-        cleanUp()
+       
     }
     
     private func hideCallingLabelStopRiningSound() {
@@ -176,16 +168,10 @@ class JitsiMeetViewController: UIViewController {
         timeLabel.text = nil
         isTimeLabelAlreadyAdded = false
         jitsiMeetView = nil
-        pipViewCoordinator = nil
     }
-    
 }
 
-extension JitsiMeetViewController: AVPictureInPictureControllerDelegate {
-    
-}
-
-extension JitsiMeetViewController: JitsiMeetViewDelegate {
+extension CustomView:JitsiMeetViewDelegate {
     func conferenceTerminated(_ data: [AnyHashable : Any]!) {
         DispatchQueue.main.async {[weak self] in
             self?.endCallManually()
@@ -227,9 +213,7 @@ extension JitsiMeetViewController: JitsiMeetViewDelegate {
             self.pipViewCoordinator?.enterPictureInPicture()
         }
     }
-}
-
-extension JitsiMeetViewController {
+    
     @objc private func updateTime() {
         initialTime = initialTime ?? Date()
         let time = Date().timeIntervalSince(initialTime!)

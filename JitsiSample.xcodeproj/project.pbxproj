@@ -16,6 +16,7 @@
 		7148E04126B3C25D00329FC2 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7148E04026B3C25D00329FC2 /* Constants.swift */; };
 		71555EA326B1AEEC0090C94D /* ProviderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71555EA226B1AEEC0090C94D /* ProviderDelegate.swift */; };
 		715EF8A426B016E800507FC5 /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 715EF8A326B016E800507FC5 /* CallKit.framework */; };
+		7174E85B26BC017C00600210 /* CustomJitsiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7174E85A26BC017C00600210 /* CustomJitsiView.swift */; };
 		7175456E26B259B800083BA7 /* JitsiMeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175456D26B259B800083BA7 /* JitsiMeetViewController.swift */; };
 		7175457326B25E9A00083BA7 /* CallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175457226B25E9A00083BA7 /* CallManager.swift */; };
 		7175457926B25F2400083BA7 /* Call.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175457826B25F2400083BA7 /* Call.swift */; };
@@ -37,6 +38,7 @@
 		71555EA226B1AEEC0090C94D /* ProviderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDelegate.swift; sourceTree = "<group>"; };
 		715EF8A326B016E800507FC5 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
 		715EF8A526B0179E00507FC5 /* JitsiSample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JitsiSample.entitlements; sourceTree = "<group>"; };
+		7174E85A26BC017C00600210 /* CustomJitsiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomJitsiView.swift; sourceTree = "<group>"; };
 		7175456D26B259B800083BA7 /* JitsiMeetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JitsiMeetViewController.swift; sourceTree = "<group>"; };
 		7175457226B25E9A00083BA7 /* CallManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
 		7175457826B25F2400083BA7 /* Call.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Call.swift; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				71555EA226B1AEEC0090C94D /* ProviderDelegate.swift */,
 				7175456D26B259B800083BA7 /* JitsiMeetViewController.swift */,
 				7148E04026B3C25D00329FC2 /* Constants.swift */,
+				7174E85A26BC017C00600210 /* CustomJitsiView.swift */,
 			);
 			path = "Call Managemet";
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 				7175457926B25F2400083BA7 /* Call.swift in Sources */,
 				71555EA326B1AEEC0090C94D /* ProviderDelegate.swift in Sources */,
 				7148E04126B3C25D00329FC2 /* Constants.swift in Sources */,
+				7174E85B26BC017C00600210 /* CustomJitsiView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
